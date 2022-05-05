@@ -1,0 +1,42 @@
+programs:
+- checksums:
+    dbmate-linux-amd64:
+      archive: e3271b1cf4b5ec71c634258ecd60e89286fa664a9da8a256b54c5eea9edee368
+      binary: e3271b1cf4b5ec71c634258ecd60e89286fa664a9da8a256b54c5eea9edee368
+  name: dbmate
+  overlay:
+    OS:
+      darwin: macos
+  paths:
+    base: https://github.com/amacneil/dbmate/releases/download/v{{ .Version }}/
+    target: '{{ .Name }}-{{ .OS }}-{{ .Arch }}'
+  version: 1.15.0
+- checksums:
+    golangci-lint-1.45.2-linux-amd64.tar.gz:
+      archive: 595ad6c6dade4c064351bc309f411703e457f8ffbb7a1806b3d8ee713333427f
+      binary: 700869bf9234e808ddecf7666cf362747cd94f7679f4d2a125bbff54f2daeb22
+  name: golangci-lint
+  paths:
+    base: https://github.com/golangci/golangci-lint/releases/download/v{{ .Version }}/
+    checksums:
+      artifact: https://github.com/golangci/golangci-lint/releases/download/v{{ .Version }}/{{ .Name }}-{{ .Version }}-checksums.txt
+    target: '{{ .Name }}-{{ .Version }}-{{ .OS }}-{{ .Arch }}.tar.gz'
+  version: 1.45.2
+- checksums:
+    litestream-v0.3.8-linux-amd64-static.tar.gz:
+      archive: 8bf9789c54ca713289d9c7d1244e682282de8f3fc9aab3b3b3c274f9c89a68f9
+      binary: 36fa44fed2d37414b7edac36fbc72c779dc26837898b0ab58dbb9f35367d03fe
+  name: litestream
+  paths:
+    base: https://github.com/benbjohnson/litestream/releases/download/v{{ .Version }}/
+    target: '{{ .Name }}-v{{ .Version }}-{{ .OS }}-{{ .Arch }}-static.tar.gz'
+  version: 0.3.8
+- checksums:
+    sqlc_1.13.0_linux_amd64.zip:
+      archive: 1f9569680f1beb2652794c39a77b734dd9d8b7b17ee2bcd26c3f8ddddbc6716f
+      binary: 9d57925ee33a684d6680b27175e0e3824b88b682e2c6b6d4ec90a685ad3970fd
+  name: sqlc
+  paths:
+    base: https://github.com/kyleconroy/sqlc/releases/download/v{{ .Version }}/
+    target: '{{ .Name }}_{{ .Version }}_{{ .OS }}_{{ .Arch }}.zip'
+  version: 1.13.0

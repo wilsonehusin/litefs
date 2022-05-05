@@ -1,0 +1,40 @@
+platforms:
+  linux:
+    - amd64
+
+programs:
+  - name: dbmate
+    version: 1.15.0
+    provider: github
+    overlay:
+      OS:
+        darwin: macos
+    paths:
+      base: amacneil/dbmate
+      target: '{{ .Name }}-{{ .OS }}-{{ .Arch }}'
+    checksums:
+      dbmate-linux-amd64: 'e3271b1cf4b5ec71c634258ecd60e89286fa664a9da8a256b54c5eea9edee368'
+  - name: litestream
+    version: 0.3.8
+    provider: github
+    paths:
+      base: benbjohnson/litestream
+      target: '{{ .Name }}-v{{ .Version }}-{{ .OS }}-{{ .Arch }}-static.tar.gz'
+    checksums:
+      litestream-v0.3.8-linux-amd64-static.tar.gz: '8bf9789c54ca713289d9c7d1244e682282de8f3fc9aab3b3b3c274f9c89a68f9'
+  - name: sqlc
+    version: 1.13.0
+    provider: github
+    paths:
+      base: kyleconroy/sqlc
+      target: '{{ .Name }}_{{ .Version }}_{{ .OS }}_{{ .Arch }}.zip'
+    checksums:
+      sqlc_1.13.0_linux_amd64.zip: '1f9569680f1beb2652794c39a77b734dd9d8b7b17ee2bcd26c3f8ddddbc6716f'
+  - name: golangci-lint
+    version: 1.45.2
+    provider: github
+    paths:
+      base: golangci/golangci-lint
+      target: "{{ .Name }}-{{ .Version }}-{{ .OS }}-{{ .Arch }}.tar.gz"
+      checksums:
+        artifact: "{{ .Name }}-{{ .Version }}-checksums.txt"
