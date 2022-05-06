@@ -3,6 +3,7 @@ package litefs
 import (
 	"context"
 	"database/sql"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -11,12 +12,17 @@ import (
 	"path/filepath"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	//_ "github.com/mattn/go-sqlite3"
+	//_ "modernc.org/sqlite"
+	_ "github.com/tailscale/sqlite"
 
 	"go.husin.dev/litefs/config"
 	"go.husin.dev/litefs/internal/db"
 	"go.husin.dev/litefs/internal/log"
 )
+
+//go:embed sql/schema/schema.sql
+var schema string
 
 const sqliteDriver = "sqlite3"
 
@@ -33,6 +39,29 @@ func NewFS(cfg *config.Config) (*FS, error) {
 	if err != nil {
 		return nil, fmt.Errorf("opening '%s' database on '%s': %w", sqliteDriver, cfg.Database, err)
 	}
+	root, err := filepath.Abs(cfg.BlobPath)
+	if err != nil {
+		return nil, fmt.Errorf("calculating absolute path of '%s': %w", cfg.BlobPath, err)
+	}
+
+	return &FS{
+		root:    root,
+		db:      db,
+		timeout: cfg.DBTimeout,
+	}, nil
+}
+
+func NewMemFS(cfg *config.Config) (*FS, error) {
+	db, err := sql.Open(sqliteDriver, cfg.Database+"?mode=memory&_fk=true")
+	if err != nil {
+		return nil, fmt.Errorf("opening '%s' database on '%s': %w", sqliteDriver, cfg.Database, err)
+	}
+	rows, err := db.Query(schema)
+	if err != nil {
+		return nil, fmt.Errorf("initializing database schema: %w", err)
+	}
+	rows.Close()
+
 	root, err := filepath.Abs(cfg.BlobPath)
 	if err != nil {
 		return nil, fmt.Errorf("calculating absolute path of '%s': %w", cfg.BlobPath, err)

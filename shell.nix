@@ -8,6 +8,9 @@ in pkgs.mkShell {
 
     # mattn/go-sqlite3 requires gcc to be installed, at least when running `go get`
     gcc
+
+    # pprof visualizer calls graphviz
+    graphviz
   ];
 
   NIX_LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [

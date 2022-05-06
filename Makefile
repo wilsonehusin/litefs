@@ -1,5 +1,6 @@
-CGO_ENABLED?=0
-GO?=go
+CGO_ENABLED?=1
+GO_BIN?=go
+GO?=CGO_ENABLED=${CGO_ENABLED} ${GO_BIN}
 
 .PHONY: clean
 clean:
@@ -7,22 +8,25 @@ clean:
 
 bin/litefs:
 	# Force enable CGO for SQLite driver
-	CGO_ENABLED=1 go mod tidy
-	CGO_ENABLED=${CGO_ENABLED} ${GO} build -trimpath \
+	${GO} mod tidy
+	${GO} build -trimpath \
 		-o bin/litefs \
 		./cmd/litefs
 
 include Makefile.bindl
 
+GIT_STAMP?=$(shell git describe --match="" --always --dirty)
+TEST_RUN_NAME?=$(shell date +%s)-${GIT_STAMP}
+
 .PHONY: test/prep
 test/prep: DBMATE_PATH=tmp/tests/litefs.db
 test/prep: DBMATE_SCHEMA_FILE=tmp/tests/schema.sql
 test/prep: bin/dbmate
-	@echo "=== TEST DATABASE ==="
+	@echo "=>> TEST DATABASE: INITIALIZING <<="
 	rm -f ${DBMATE_PATH} ${DBMATE_SCHEMA_FILE}
 	mkdir -p tmp/tests
 	${MAKE} --no-print-directory db/migrate DBMATE_PATH=${DBMATE_PATH} DBMATE_SCHEMA_FILE=${DBMATE_SCHEMA_FILE}
-	@echo "--- TEST DATABASE ---"
+	@echo "<<= TEST DATABASE: READY ==>"
 	@echo 
 
 .PHONY: test/unit
@@ -32,6 +36,25 @@ test/unit: test/prep
 .PHONY: test/bench
 test/bench: test/prep
 	${GO} test -v -run='.*Benchmark.*' -benchmem -bench=.
+
+.PHONY: test/bench/benchstat
+test/bench/benchstat: test/prep
+	@mkdir -p tmp/bench/benchstat
+	${GO} test -v -run='.*Benchmark.*' -benchmem -bench=. > tmp/bench/benchstat/${TEST_RUN_NAME}.txt
+	@echo
+	@ls -d tmp/bench/benchstat/* | tail -n2 | xargs benchstat
+
+.PHONY: test/bench/pprof
+test/bench/pprof: test/prep
+	@mkdir -p tmp/bench/pprof
+	${GO} test -v -run='.*Benchmark.*' \
+		-cpuprofile tmp/bench/pprof/${TEST_RUN_NAME}-cpuprofile-litefs.out \
+		-memprofile tmp/bench/pprof/${TEST_RUN_NAME}-memprofile-litefs.out \
+		-benchmem -bench=ProfLiteFS
+	${GO} test -v -run='.*Benchmark.*' \
+		-cpuprofile tmp/bench/pprof/${TEST_RUN_NAME}-cpuprofile-osfs.out \
+		-memprofile tmp/bench/pprof/${TEST_RUN_NAME}-memprofile-osfs.out \
+		-benchmem -bench=ProfOSFS
 
 .PHONY: test/all
 test/all: test/unit

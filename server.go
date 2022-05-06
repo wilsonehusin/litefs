@@ -17,14 +17,14 @@ type Server struct {
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
-	bs, err := NewFS(cfg)
+	lfs, err := NewFS(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("initializing FS: %w", err)
 	}
 
 	s := &http.Server{
 		Addr:         cfg.Address,
-		Handler:      bs,
+		Handler:      lfs,
 		ReadTimeout:  cfg.RequestTimeout,
 		WriteTimeout: cfg.RequestTimeout,
 		ErrorLog:     log.Stdlib("http"),

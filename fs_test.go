@@ -13,7 +13,20 @@ import (
 	"go.husin.dev/litefs/config"
 )
 
-const dbPath = "./tmp/tests/litefs.db"
+const dbPath = "file:tmp/tests/litefs.db"
+
+func initLiteFS(tb testing.TB) *litefs.FS {
+	lfs, err := litefs.NewFS(&config.Config{
+		Database:  dbPath,
+		DBTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		tb.Fatal(err)
+	}
+	tb.Cleanup(purgeFS(tb, lfs))
+
+	return lfs
+}
 
 func purgeFS(tb testing.TB, lfs *litefs.FS) func() {
 	return func() {
@@ -24,20 +37,10 @@ func purgeFS(tb testing.TB, lfs *litefs.FS) func() {
 }
 
 func TestFSWalkOpen(t *testing.T) {
-	lfs, err := litefs.NewFS(&config.Config{
-		BlobPath:  t.TempDir(),
-		Database:  dbPath,
-		DBTimeout: 5 * time.Second,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	purgeFS(t, lfs)()
-	t.Cleanup(purgeFS(t, lfs))
-
 	testPath := "my/path/to/file"
 	testContent := []byte("foo bar baz")
 
+	lfs := initLiteFS(t)
 	if err := lfs.WriteBlob(context.Background(), testPath, testContent); err != nil {
 		t.Fatal(err)
 	}
@@ -99,19 +102,9 @@ func TestFSWalkOpen(t *testing.T) {
 }
 
 func TestFSMerge(t *testing.T) {
-	lfs, err := litefs.NewFS(&config.Config{
-		BlobPath:  t.TempDir(),
-		Database:  dbPath,
-		DBTimeout: 5 * time.Second,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	purgeFS(t, lfs)()
-	t.Cleanup(purgeFS(t, lfs))
-
 	sqlDir := os.DirFS(testDirPath)
 
+	lfs := initLiteFS(t)
 	if err := lfs.Merge(context.Background(), sqlDir, "."); err != nil {
 		t.Fatal(err)
 	}

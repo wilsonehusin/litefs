@@ -5,23 +5,12 @@ import (
 	"io/fs"
 	"os"
 	"testing"
-	"time"
-
-	"go.husin.dev/litefs"
-	"go.husin.dev/litefs/config"
 )
 
 const testDirPath = "./sql"
 
 func BenchmarkLiteFSMerge(b *testing.B) {
-	lfs, err := litefs.NewFS(&config.Config{
-		BlobPath:  b.TempDir(),
-		Database:  dbPath,
-		DBTimeout: 5 * time.Second,
-	})
-	if err != nil {
-		b.Fatal(err)
-	}
+	lfs := initLiteFS(b)
 
 	b.StopTimer()
 	b.ResetTimer()
@@ -34,22 +23,10 @@ func BenchmarkLiteFSMerge(b *testing.B) {
 			b.Error(err)
 		}
 	}
-
-	purgeFS(b, lfs)()
 }
 
-func BenchmarkLiteFSWalkNoop(b *testing.B) {
-	lfs, err := litefs.NewFS(&config.Config{
-		BlobPath:  b.TempDir(),
-		Database:  dbPath,
-		DBTimeout: 5 * time.Second,
-	})
-	if err != nil {
-		b.Fatal(err)
-	}
-	purgeFS(b, lfs)()
-	b.Cleanup(purgeFS(b, lfs))
-
+func BenchmarkProfLiteFSWalkNoop(b *testing.B) {
+	lfs := initLiteFS(b)
 	if err := lfs.Merge(context.Background(), os.DirFS(testDirPath), "."); err != nil {
 		b.Fatal(err)
 	}
@@ -65,7 +42,7 @@ func BenchmarkLiteFSWalkNoop(b *testing.B) {
 	b.StopTimer()
 }
 
-func BenchmarkOSFSWalkNoop(b *testing.B) {
+func BenchmarkProfOSFSWalkNoop(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		if err := fs.WalkDir(os.DirFS(testDirPath), ".", func(path string, d fs.DirEntry, err error) error {
 			return err
